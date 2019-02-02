@@ -1,0 +1,9 @@
+/**
+ * @overview default layout of ccm component for kanban team analytics
+ * @author Julian Schäfer <Julian.Schaefer@smail.inf.h-brs.de> 2019
+ * @license The MIT License (MIT)
+ */
+
+#element {
+  overflow-x: auto;
+}
