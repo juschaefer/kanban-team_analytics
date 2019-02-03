@@ -19,9 +19,7 @@
 
             // user: ["ccm.instance", "https://ccmjs.github.io/akless-components/user/versions/ccm.user-8.3.1.js", ["ccm.get", "https://ccmjs.github.io/akless-components/user/resources/configs.js", "guest"]],
 
-            html: {
-
-            },
+            html: {},
 
             // bootstrap: [
             //     "ccm.load", {
@@ -62,6 +60,39 @@
 
             this.start = async () => {
 
+                let team_data = (await self.data.teams_store.get(self.data.key)).teams;
+                console.log("team_data", team_data);
+
+                let board_data = (await self.data.boards_store.get(self.data.key)).lanes;
+                console.log("board_data", board_data);
+
+                let card_data = await self.data.cards_store.get();
+                console.log("card_data", card_data);
+
+
+                // TEAMS
+                const anzahl_teams = team_data.length;
+                console.log("Anzahl Teams", anzahl_teams);
+
+                const anzahl_nicht_leer_teams = team_data.reduce((result, team, index, team_data) => {
+                    return result += Object.keys(team.members).length > 0 ? 1 : 0;
+                }, 0);
+                console.log("Anzahl nicht leerer Teams", anzahl_nicht_leer_teams);
+
+                const anzahl_teilnehmer = team_data.reduce((result, team, index, team_data) => {
+                    return result + Object.keys(team.members).length;
+                }, 0);
+                console.log("Anzahl Teilnehmer", anzahl_teilnehmer);
+
+                const durchschnitt_members_team = round(anzahl_teilnehmer / anzahl_teams);
+                console.log("Durchschnittliche Anzahl Teilnhemer pro Team", durchschnitt_members_team);
+
+                const durchschnitt_members_nicht_leerer_team = round(anzahl_teilnehmer / anzahl_nicht_leer_teams);
+                console.log("Durchschnittliche Anzahl Teilnhemer pro (nicht leerem) Team", durchschnitt_members_nicht_leerer_team);
+
+                // BOARD
+
+
             };
 
             /**
@@ -72,6 +103,29 @@
 
         }
 
+    };
+
+    function round(number, precision) {
+    // function round(number) {
+
+        // When not a number oder an interger is given
+        // if (!number.isNumber || number.isInteger) {
+        //     console.log("RETURN");
+        //     return number;
+        // }
+
+        // Default Value if precision is not set
+        if (precision == null || typeof precision == 'undefined') {
+            precision = 1;
+        }
+
+        let factor = 1;
+        for (let count = 0; count < precision; count++) {
+            factor *= 10;
+        }
+
+        return (Math.round(number * factor) / factor);
+        // return Math.round(number);
     };
 
     let b = "ccm." + component.name + (component.version ? "-" + component.version.join(".") : "") + ".js";
