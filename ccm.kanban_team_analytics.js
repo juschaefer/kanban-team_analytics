@@ -8,6 +8,8 @@
 
 (function () {
 
+    let card_data = [];
+
     const component = {
 
         name: 'kanban_team_analytics',
@@ -18,6 +20,7 @@
         config: {
 
             // user: ["ccm.instance", "https://ccmjs.github.io/akless-components/user/versions/ccm.user-8.3.1.js", ["ccm.get", "https://ccmjs.github.io/akless-components/user/resources/configs.js", "guest"]],
+            highchart: ["ccm.component", "https://ccmjs.github.io/akless-components/highchart/ccm.highchart.js"],
 
             html: {
                 // "main": ["ccm.load", 'resources/tpl.analytics.html'],
@@ -31,7 +34,7 @@
 
                 main: {
                     id: "main",
-                    class: "container",
+                    class: "container-fluid",
                     inner: [
                         {
                             class: "card",
@@ -193,6 +196,10 @@
                     class: "custom-select",
                     inner: "%teams%",
                     onchange: "%onchange%"
+                },
+                row: {
+                    class: "row",
+                    inner: "%content%"
                 }
                 // boards: {
                 //     inner: "%board_data%"
@@ -292,15 +299,20 @@
                     10.45
                 ];
 
+                console.log("key", self.data.key);
+
                 let team_data = (await self.data.teams_store.get(self.data.key)).teams;
                 console.log("team_data", team_data);
 
-                let board_data = (await self.data.boards_store.get(self.data.key)).lanes;
+                //let board_data = (await self.data.boards_store.get(self.data.key)).lanes;
+                let board_data = (await self.data.boards_store.get({ _id: { $regex: '^' + self.data.key + '*' }}));
                 console.log("board_data", board_data);
 
-                let card_data = await self.data.cards_store.get();
+                card_data = await self.data.cards_store.get();
                 console.log("card_data", card_data);
 
+                let team_log_data = await self.data.team_log_store.get();
+                console.log("team_log_data", team_log_data);
 
                 // TEAMS
 
@@ -404,28 +416,34 @@
                 // Je Karte!
                 const lane_card = [];
 
+                console.log("board_data", board_data);
+
                 for (let lane_index = 0; lane_index < board_data.length; lane_index++) {
                     const lane = board_data[lane_index];
 
-                    if (Object.keys(lane.cards).length > 0) {
-                        for (let card_index = 0; card_index < lane.cards.length; card_index++) {
+                    console.log("lane", lane.lanes[0]);
 
-                            let card = lane.cards[card_index];
+                    if (Object.keys(lane.lanes[0].cards).length > 0) {
+                        for (let card_index = 0; card_index < lane.lanes[0].cards.length; card_index++) {
+
+                            let card = lane.lanes[0].cards[card_index];
 
                             const card_store = await ccm.store(card[2].data.store[1]);
                             const card_data = await card_store.get(card[2].data.key);
 
-                            console.log("lane_team", card_data.owner);
+                            console.log("lane_team", card_data);
 
-                            lane_card.push({
-                                "lane": {
-                                    "index": lane_index,
-                                    "data": lane
-                                },
-                                "card": card_data,
-                                "team": users[card_data.owner],
-                                "user": card_data.owner
-                            });
+                            if (card_data) {
+                                lane_card.push({
+                                    "lane": {
+                                        "index": lane_index,
+                                        "data": lane
+                                    },
+                                    "card": card_data,
+                                    "team": users[card_data.owner],
+                                    "user": card_data.owner
+                                });
+                            }
                         }
                     } else {
                         lane_card.push({
@@ -489,7 +507,7 @@
 
                 board_data.forEach((lane, index, board_data) => {
                     // Lane ohne Karten
-                    let lane_count = lane.cards.length;
+                    let lane_count = lane.lanes[0].cards.length;
                     // if (Object.keys(lane.cards).length > 0) {
                     //     lane_count = 0;
                     // }
@@ -501,7 +519,7 @@
                         card_body: "Karten: " + lane_count
                     }));
 
-                    console.log("Lane " + index, lane_count);
+                    // console.log("Lane " + index, lane_count);
                     // } else {
                     //     console.log("Lane " + index, 0);
                     // }
@@ -528,8 +546,6 @@
                     }, 0);
                 }
 
-                // console.log("cards for jschae2s", count_cards(card_data, 'jschae2s'));
-
                 let team_chooser = [];
                 teams.forEach((current, index, team) => {
                     team_chooser.push({
@@ -539,29 +555,25 @@
                     });
                 });
 
-                console.log("team_choose", team_chooser);
-
-                // Auswertung Studierende: Wer hat wiviel Karten? Wieviel Karten sind in welcher Line (%?)?
-
-                function changeTeam(index) {
-                    const area = self.element.querySelector('#teams_student_area');
+                async function changeTeam(index) {
+                    const card_area = self.element.querySelector('#teams_student_area');
+                    const chart_area = self.element.querySelector('#uebersicht_karten');
 
                     // Clear Area
-                    area.innerHTML = "";
+                    card_area.innerHTML = "";
+                    chart_area.innerHTML = "";
 
-                    console.log(teams[index]);
+                    let html_team_crads = card_area.appendChild($.html(self.html.row, {content: ""}));
 
-                    // area.appendChild($.html("<h3>" + index + "</h3>"));
-
-                    const sum_cards_team = teams[index].team_members.reduce( (result, member) => {
+                    const sum_cards_team = teams[index].team_members.reduce((result, member) => {
                         return result + users[member].cards.length;
                     }, 0);
 
-                    teams[index].team_members.forEach( (member) => {
+                    teams[index].team_members.forEach((member) => {
 
                         const user = users[member];
 
-                        area.appendChild( $.html(self.html.card, {
+                        html_team_crads.appendChild($.html(self.html.card, {
                             card_header: member,
                             card_body: [
                                 {
@@ -599,7 +611,92 @@
                         }));
                     });
 
+                    const SERIES_TEMP_DATA = [];
+
+                    for (let board_index = 0; board_index < board_data.length; board_index++) {
+
+                        const board = (board_data[board_index]).lanes[0];
+
+                        console.log("board", board);
+                        for (let card_index = 0; card_index < board.cards.length; card_index++) {
+                            const card = board.cards[card_index];
+                            const card_data = _getCard(card[2].data.key);
+
+                            if (card_data.length > 0) {
+
+                                SERIES_TEMP_DATA.push({
+                                    "board_index": board_index,
+                                    // "board_title": board.titel,
+                                    "owner": card_data[0].owner,
+                                    "key": card_data[0].key
+                                });
+
+                            }
+
+                        }
+                    }
+
+                    let SERIES_DATA = board_data.map( (board, board_index) => {
+
+                        let y = [];
+
+                        teams[index].team_members.forEach(member => {
+
+                            y.push(SERIES_TEMP_DATA
+                                .filter( datum => {
+                                    return (datum.board_index === board_index);
+                                }).reduce( (result, card) => {
+                                    return card.owner === member ? ++result: result;
+                                }, 0));
+                        });
+
+                        return {
+                            "name": board.title ? board.title: "Board " + board_index,
+                            "data": y
+                        }
+                    });
+
+                    const board_card_chart = await self.highchart.start({
+                        "settings": {
+                            "chart": {
+                                "type": "column"
+                            },
+                            "title": {
+                                "text": "Übersicht Kartenverteilung"
+                            },
+                            "xAxis": {
+                                // "categories": [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ],
+                                "categories": teams[index].team_members,
+                                "crosshair": true
+                            },
+                            "yAxis": {
+                                "min": 0,
+                                "title": {
+                                    "text": "Anzahl Karten"
+                                }
+                            },
+                            "tooltip": {
+                                "headerFormat": "<span style='font-size:1.1em'>{point.key}</span><table>",
+                                "pointFormat": "<tr><td style='color:{series.color};padding:0'>{series.name}: </td><td style='padding:0'><b>{point.y}</b></td></tr>",
+                                "footerFormat": "</table>",
+                                "shared": true,
+                                "useHTML": true
+                            },
+                            "plotOptions": {
+                                "column": {
+                                    "pointPadding": 0.2,
+                                    "borderWidth": 0
+                                }
+                            },
+                            "series": SERIES_DATA
+                        }
+                    });
+
+                    chart_area.appendChild($.html(board_card_chart.root));
+
                 }
+
+                // Auswertung Studierende: Wer hat wiviel Karten? Wieviel Karten sind in welcher Line (%?)?
 
                 let blub = $.html(self.html.card, {
                     card_header: "Studierende",
@@ -609,18 +706,207 @@
                             $.html(self.html.team_chooser, {
                                 teams: team_chooser,
                                 onchange: function (event) {
-                                        changeTeam(this.value);
+                                    changeTeam(this.value);
                                 }
                             }),
                             {
                                 id: "teams_student_area",
                                 class: "d-flex flex-row justify-content-around"
+                            },
+                            {
+                                id: "uebersicht_karten",
+                                class: "row-fluid"
                             }
                         ]
                     }
                 });
 
+                // blub.addClass("align-items-center");
+
                 main.appendChild(blub);
+
+                /**
+                 * Login-Count
+                 * Erstellt eine Karte mit einem Pie-Chart welches die Anzahl an Anmeldungen am System pro User anzeigt.
+                 */
+
+                let login = _getLogEventData("start", team_log_data);
+
+                let user_group = {};
+                for (let key in login) {
+                    let date = login[key].data.user;
+                    if (!user_group[date]) {
+                        user_group[date] = [];
+                    }
+                    user_group[date].push(login[key]);
+                }
+
+
+                let login_count = [];
+
+                for (let key in user_group) {
+                    login_count.push({
+                        "name": key,
+                        "y": user_group[key].reduce((result, entry, index) => {
+                            // console.log("entry", entry);
+                            return ++result;
+                        }, 0)
+                    });
+                }
+
+
+                const login_chart = await self.highchart.start({
+                    "settings": {
+                        "chart": {
+                            "plotBackgroundColor": null,
+                            "plotBorderWidth": null,
+                            "plotShadow": false,
+                            "type": "pie"
+                        },
+                        "title": {
+                            "text": "Benutzung der Anwendung (Starts)"
+                        },
+                        "tooltip": {
+                            "pointFormat": "{series.name}: <b>{point.percentage:.1f}%</b>"
+                        },
+                        "plotOptions": {
+                            "pie": {
+                                "allowPointSelect": true,
+                                "cursor": "pointer",
+                                "dataLabels": {
+                                    "enabled": true,
+                                    "format": "<b>{point.name}</b>: {point.percentage:.1f} %",
+                                    "style": {
+                                        "color": "black"
+                                    }
+                                }
+                            }
+                        },
+                        "series": [
+                            {
+                                "name": "User",
+                                "colorByPoint": true,
+                                "data": login_count,
+                                // [
+                                //     {
+                                //         "name": "Chrome",
+                                //         "y": 61.41,
+                                //         "sliced": true,
+                                //         "selected": true
+                                //     },
+                                //     {
+                                //         "name": "Internet Explorer",
+                                //         "y": 11.84
+                                //     },
+                                //     {
+                                //         "name": "Firefox",
+                                //         "y": 10.85
+                                //     },
+                                //     {
+                                //         "name": "Edge",
+                                //         "y": 4.67
+                                //     },
+                                //     {
+                                //         "name": "Safari",
+                                //         "y": 4.18
+                                //     },
+                                //     {
+                                //         "name": "Sogou Explorer",
+                                //         "y": 1.64
+                                //     },
+                                //     {
+                                //         "name": "Opera",
+                                //         "y": 1.6
+                                //     },
+                                //     {
+                                //         "name": "QQ",
+                                //         "y": 1.2
+                                //     },
+                                //     {
+                                //         "name": "Other",
+                                //         "y": 2.61
+                                //     }
+                                // ]
+                            }
+                        ]
+                    }
+
+                    // "settings": {
+                    //     "title": {
+                    //         "text": "Benutzung der Anwendung"
+                    //     },
+                    //     // "subtitle": {
+                    //     //     "text": "Source: thesolarfoundation.com"
+                    //     // },
+                    //     "yAxis": {
+                    //         "title": {
+                    //             "text": "Anmeldungen"
+                    //         }
+                    //     },
+                    //     "legend": {
+                    //         "layout": "vertical",
+                    //         "align": "right",
+                    //         "verticalAlign": "middle"
+                    //     },
+                    //     "plotOptions": {
+                    //         "series": {
+                    //             "label": {
+                    //                 "connectorAllowed": false
+                    //             },
+                    //             // "pointStart": 2010
+                    //         }
+                    //     },
+                    //     "series": [
+                    //         {
+                    //             "name": "Installation",
+                    //             "data": [ 43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175 ]
+                    //         },
+                    //         {
+                    //             "name": "Manufacturing",
+                    //             "data": [ 24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434 ]
+                    //         },
+                    //         {
+                    //             "name": "Sales & Distribution",
+                    //             "data": [ 11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387 ]
+                    //         },
+                    //         {
+                    //             "name": "Project Development",
+                    //             "data": [ null, null, 7988, 12169, 15112, 22452, 34400, 34227 ]
+                    //         },
+                    //         {
+                    //             "name": "Other",
+                    //             "data": [ 12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111 ]
+                    //         }
+                    //     ],
+                    //     "responsive": {
+                    //         "rules": [
+                    //             {
+                    //                 "condition": {
+                    //                     "maxWidth": 500
+                    //                 },
+                    //                 "chartOptions": {
+                    //                     "legend": {
+                    //                         "layout": "horizontal",
+                    //                         "align": "center",
+                    //                         "verticalAlign": "bottom"
+                    //                     }
+                    //                 }
+                    //             }
+                    //         ]
+                    //     }
+                    // }
+                });
+
+                const logins = $.html(self.html.card, {
+                    card_header: "Anmeldungen",
+                    card_body: {
+                        inner: [
+                            login_chart.root
+                        ]
+                    }
+                });
+
+                main.appendChild(logins);
 
                 // Default Team
                 changeTeam(0);
@@ -640,6 +926,15 @@
     /**
      * ANALYTICS FUNCTION
      */
+    let teamData;
+    let boardDate;
+    let cardData;
+
+    function _getCard(card_id) {
+        return card_data.filter(datum => {
+            return datum.key === card_id;
+        });
+    }
 
     function _anzahl_teams(data) {
         // const anzahl_teams = team_data.length;
@@ -694,14 +989,21 @@
     }
 
     function _sum_cards(data) {
+        console.log("data", data);
         return data.reduce((result, lane, index, board_data) => {
             // Object ohne Karten
-            if (Object.keys(lane.cards).length == 0) {
+            if (Object.keys(lane.lanes[0].cards).length === 0) {
                 return result;
             }
 
-            return result + lane.cards.length;
+            return result + lane.lanes[0].cards.length;
         }, 0);
+    }
+
+    function _getLogEventData(event, data) {
+        return data.filter(datum => {
+            return datum.event === event;
+        });
     }
 
     /**
@@ -733,7 +1035,7 @@
 
     function array_max(dataArray) {
         if (dataArray.length > 0) {
-            let max = dataArray[0]
+            let max = dataArray[0];
             dataArray.forEach((datum, index, dataArray) => {
                 if (datum > max) {
                     max = datum;

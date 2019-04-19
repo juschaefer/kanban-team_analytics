@@ -10,10 +10,11 @@ ccm.files['configs.js'] = {
         "key": "vm",
 
         "data": {
-            "teams_store": ["ccm.store", {"name": "teambuild", "url": "http://192.168.99.101:8080"}],
-            "boards_store": ["ccm.store", {"name": "kanban_team_borad", "url": "http://192.168.99.101:8080"}],
-            "cards_store": ["ccm.store", {"name": "kanban_team_cards", "url": "http://192.168.99.101:8080"}],
-            "key": "sose_19"
+            "teams_store": ["ccm.store", {"name": "jschae2s_teambuild", "url": "http://192.168.99.101:8080"}],
+            "boards_store": ["ccm.store", {"name": "jschae2s_kanban_team_borad", "url": "http://192.168.99.101:8080"}],
+            "cards_store": ["ccm.store", {"name": "jschae2s_kanban_team_cards", "url": "http://192.168.99.101:8080"}],
+            "team_log_store": ["ccm.store", {"name": "jschae2s_kanban_team_log", "url": "http://192.168.99.101:8080"}],
+            "key": "jschae2s_sose_19"
         },
     }
 
