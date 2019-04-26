@@ -47,100 +47,28 @@
                                     class: "card-body",
                                     // inner: "%teams%"
                                     inner: [
-                                        /*{
+                                        {
+                                            class: "row",
                                             inner: [
                                                 {
-                                                    class: "container-fluid",
-                                                    inner: [
-                                                        {
-                                                            class: "row",
-                                                            inner: [
-                                                                {
-                                                                    class: "col-sm-4",
-                                                                    inner: "Anzahl Teams"
-                                                                },
-                                                                {
-                                                                    class: "col-sm-8",
-                                                                    inner: "%anzahl_teams%"
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            class: "row",
-                                                            inner: [
-                                                                {
-                                                                    class: "col-sm-4",
-                                                                    inner: "Anzahl Teammitglieder"
-                                                                },
-                                                                {
-                                                                    class: "col-sm-8",
-                                                                    inner: "%anzahl_team_mitglieder%"
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            class: "row",
-                                                            inner: [
-                                                                {
-                                                                    class: "col-sm-4",
-                                                                    inner: " &Oslash;  Mitglieder pro Team"
-                                                                },
-                                                                {
-                                                                    class: "col-sm-8",
-                                                                    inner: "%mitglieder_pro_team%"
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            class: "row",
-                                                            inner: [
-                                                                {
-                                                                    class: "col-sm-4",
-                                                                    inner: "Min (> 0)"
-                                                                },
-                                                                {
-                                                                    class: "col-sm-8",
-                                                                    inner: "%min%"
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            class: "row",
-                                                            inner: [
-                                                                {
-                                                                    class: "col-sm-4",
-                                                                    inner: "Max"
-                                                                },
-                                                                {
-                                                                    class: "col-sm-8",
-                                                                    inner: "%max%"
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            class: "row",
-                                                            inner: [
-                                                                {
-                                                                    class: "col-sm-4",
-                                                                    inner: "Gesamtzahl Karten"
-                                                                },
-                                                                {
-                                                                    class: "col-sm-8",
-                                                                    inner: "%sum_cards%"
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
+                                                    class: "col-sm-6",
+                                                    inner: "Teilnehmer: %sum_user%<br><br>Teams: %sum_teams%<br>&Oslash;  Mitglieder pro Team: %average_user_team%<br>&Oslash;  Mitglieder pro Team: %average_user_team%<br><br>Karten: %sum_cards%<br>&Oslash;  Karten pro Team: %average_card_team%"
+                                                }, {
+                                                    class: "col-sm-6",
+                                                    id: "platform_chart"
                                                 }
                                             ]
-                                        },*/
-                                        /*{
-                                            tag: "hr"
-                                        },*/
-                                        {
-                                            class: "d-flex flex-row justify-content-around",
-                                            inner: "%teams%"
+                                        }, {
+                                            inner: {
+                                                tag: "hr"
+                                            }
+                                        }, {
+                                            inner: {
+                                                class: "d-flex justify-content-around",
+                                                inner: "%teams%"
+                                            }
                                         }
+
                                     ]
 
                                 }
@@ -159,10 +87,17 @@
                             inner: "%team_name%"
                         },
                         {
-
                             class: "card-body",
-                            inner: {
-
+                            inner: [{
+                                inner: "Karten: %sum_team_cards%"
+                            }, {
+                                inner: "Teilnehmer: %sum_team_user%"
+                            }, {
+                                tag: "br"
+                            }, {
+                                tag: "h6",
+                                inner: "Mitglieder"
+                            }, {
                                 tag: "ul",
                                 // style: "list-style-type: none;",
                                 // inner: "%team_member%"
@@ -171,7 +106,7 @@
                                         inner: "%team_member%"
                                     }
                                 ]
-                            }
+                            }]
                         }
                     ]
                 },
@@ -218,9 +153,6 @@
             css: ["ccm.load", "https://ccmjs.github.io/akless-components/kanban_board/resources/default.css"],
             data: {},
 
-            // aggreated_team_data: {},
-            // aggreated_board_data: {},
-
             //  "ignore": { "card": { "component": "https://ccmjs.github.io/akless-components/kanban_card/ccm.kanban_card.js", "config": {} } },
             // "onchange": function (event) {
             //     console.log(this.index, 'onchange', this.getValue(), event)
@@ -234,9 +166,9 @@
             let $, data;
             const self = this;
 
-            let team_data;
-            let board_data;
-            let card_data;
+            // let team_data;
+            // let board_data;
+            // let card_data;
 
             this.ready = async () => {
 
@@ -279,14 +211,6 @@
                 team_data.forEach((team, index, team_data) => {
 
                     // console.log("team", team);
-
-                    // console.log("team.members", team.members);
-                    // console.log("team.members.length: ", team.members.length);
-                    // if (team.members.length < 1) {
-                    //     console.log("delete not empty team");
-                    //     team_data.splice(index, 1);
-                    //     return;
-                    // }
 
                     // Convert Member-Data to array
                     // Add cards-attribute to member
@@ -337,33 +261,6 @@
                         });
                     });
                 });
-
-                // board_data.forEach((board, index) => {
-                //     console.log("board", board.lanes);
-                //
-                //     board.lanes.forEach((lane, index) => {
-                //         lane.cards.forEach((card, index) => {
-                //             // console.log("card", card[2].data.key);
-                //             // card = getCard(card[2].data.key);
-                //             // getCard(card[2].data.key)["lane"] = lane;
-                //         });
-                //     });
-                // });
-
-                /*board_data.forEach((board, index) => {
-                    // console.log("board", board);
-                    board.lanes.forEach((lane, index_) => {
-                        // console.log("lane", lane);
-
-                        lane.cards.forEach((current, index__) => {
-                            // console.log("raw card", card);
-                            // console.log("resolved", );
-
-                            // current[2] = getCard(current[2].data.key);
-                        });
-
-                    });
-                });*/
 
                 // ==================
                 // = Aggregate Data =
@@ -419,36 +316,119 @@
                     let team_ = self.html.team;
                     let members_ = "";
 
-                    // console.log("team", team);
+                    team.members.forEach((member, index, team) => {
+                        members_ += "<li>" + member.name + "</li>";
+                    });
 
-                    // Exclude empty teams
-                    // if (team.members.length > 0) {
-
-                        team.members.forEach((member, index, team) => {
-                            members_ += "<li>" + member.name + "</li>";
-                        });
-
-                        teams_html.push($.html(team_, {
-                            team_name: team.name,
-                            team_member: members_
-
-                        }));
-                    // }
+                    teams_html.push($.html(team_, {
+                        team_name: team.name,
+                        sum_team_cards: team.card_count,
+                        sum_team_user: team.member_count,
+                        team_member: members_
+                    }));
                 });
 
+                /**
+                 *
+                 *
+                 */
+                const SUM_TEAMS = aggregated_data.length;
+
+                const SUM_USER = aggregated_data.reduce((result, current) => {
+                    return result + current.member_count;
+                }, 0);
+
+                const AVERAGE_USER_TEAM = round(SUM_USER / SUM_TEAMS, 1);
+
+                const SUM_CARDS = aggregated_data.reduce((result, current) => {
+                    return result + current.card_count;
+                }, 0);
+
+                const AVERAGE_CARD_TEAM = round(SUM_CARDS / SUM_TEAMS, 1);
+
                 $.setContent(self.element, $.html(self.html.main, {
-                    // anzahl_teams: _anzahl_teams(team_data),
-                    // anzahl_team_mitglieder: _anzahl_team_mitglieder(team_data),
-                    // mitglieder_pro_team: _mitglieder_pro_team(team_data),
-                    // min: _min(team_data),
-                    // max: _max(team_data),
-                    // team_member: _team_member(team_data),
-                    // sum_cards: _sum_cards(board_data),
+                    sum_teams: SUM_TEAMS,
+
+                    sum_user: SUM_USER,
+                    average_user_team: AVERAGE_USER_TEAM,
+
+                    sum_cards: SUM_CARDS,
+                    average_card_team: AVERAGE_CARD_TEAM,
+
                     teams: teams_html
                 }));
 
                 const main = self.element.querySelector('#main');
 
+                /**
+                 *
+                 */
+                let PLATFORM = [];
+                team_log_data.forEach(current => {
+                    if (PLATFORM.indexOf(current.browser.platform) < 0) {
+                        PLATFORM.push(current.browser.platform);
+                    }
+                });
+
+                /**
+                 *
+                 */
+                const PLATFORM_CHART = await self.highchart.start({
+                    "settings": {
+                        "chart": {
+                            "plotBackgroundColor": null,
+                            "plotBorderWidth": null,
+                            "plotShadow": false,
+                            "type": "pie"
+                        },
+                        "title": {
+                            "text": "Platform"
+                        },
+                        "tooltip": {
+                            "pointFormat": "<b>{point.percentage:.1f}% ({point.y})</b>"
+                        },
+                        "plotOptions": {
+                            "pie": {
+                                "allowPointSelect": true,
+                                "cursor": "pointer",
+                                "dataLabels": {
+                                    "enabled": true,
+                                    "format": "<b>{point.name}</b>: {point.percentage:.1f} %",
+                                    "style": {
+                                        "color": "black"
+                                    }
+                                }
+                            }
+                        },
+                        "series": [
+                            {
+                                "name": "Platform",
+                                "colorByPoint": true,
+                                "data": PLATFORM.map(current => {
+                                    return {
+                                        "name": current,
+                                        "y": team_log_data.reduce((result, current_log) => {
+                                            if (current === current_log.browser.platform) {
+                                                result++;
+                                            }
+
+                                            return result;
+                                        }, 0)
+                                    };
+                                })
+                            }
+                        ]
+                    }
+
+                });
+
+                const PLATFORM_CHART_AREA = self.element.querySelector('#platform_chart');
+                PLATFORM_CHART_AREA.appendChild($.html(PLATFORM_CHART.root));
+
+                /**
+                 *
+                 *
+                 */
                 let team_chooser = [];
                 team_data.forEach((current, index, team) => {
                     team_chooser.push({
@@ -459,43 +439,18 @@
                 });
 
                 async function changeTeam(index) {
-                    const card_area = self.element.querySelector('#teams_student_area');
-                    const chart_area = self.element.querySelector('#uebersicht_karten');
+                    const TEAM_CARD_AREA = self.element.querySelector('#teams_student_area');
+                    const BOARD_CHART_AREA = self.element.querySelector('#uebersicht_karten');
+                    const LOGIN_CHART_AREA = self.element.querySelector('#benutzung_anwendung');
 
                     // Clear Area
-                    card_area.innerHTML = "";
-                    chart_area.innerHTML = "";
+                    TEAM_CARD_AREA.innerHTML = "";
+                    BOARD_CHART_AREA.innerHTML = "";
+                    LOGIN_CHART_AREA.innerHTML = "";
 
-                    let html_team_crads = card_area.appendChild($.html(self.html.row, {content: ""}));
-
-                    // const sum_cards_team = team_data[index].team_members.reduce((result, member) => {
-                    //     return result + users[member].cards.length;
-                    // }, 0);
-
-                    // console.log("team_data["+index+"]", team_data[index]);
-
-                    // const sum_cards_team = card_data.reduce((card, current, index, return_) => {
-                    /*const sum_cards_team = card_data.reduce((accumulator, currentValue, currentIndex, array) => {
-
-                        for (let index_ = 0; index_ < team_data.length; index_++) {
-                            let team = team_data[index_];
-
-                            // if (team.members.indexOf(currentValue.owner)) {
-                            //     console.log("accumulator", accumulator);
-                            //     return ++accumulator;
-                            // }
-                        }
-
-                        // team_data.forEach((team, index, team_data) => {
-                        //     console.log("card", card);
-                        //     if (team.members.indexOf(card.owner)) {
-                        //         return ++return_;
-                        //     }
-                        // });
-
-                    }, 0);
-
-                    // console.log("sum_cards_team", sum_cards_team);*/
+                    let html_team_crads = TEAM_CARD_AREA.appendChild($.html({
+                        class: "d-flex justify-content-around"
+                    }));
 
                     aggregated_data[index].members.forEach(member => {
 
@@ -507,29 +462,11 @@
                                     inner: [
                                         {
                                             class: "row",
-                                            inner: [
-                                                {
-                                                    class: "col-sm-6",
-                                                    inner: "Anzahl Karten"
-                                                },
-                                                {
-                                                    class: "col-sm-6",
-                                                    inner: member.cards.length
-                                                }
-                                            ]
+                                            inner: "Anzahl Karten: " + member.cards.length
                                         },
                                         {
                                             class: "row",
-                                            inner: [
-                                                {
-                                                    class: "col-sm-6",
-                                                    inner: "Relativ zum Team"
-                                                },
-                                                {
-                                                    class: "col-sm-6",
-                                                    inner: aggregated_data[index].card_count > 0 ? round(((member.cards.length / aggregated_data[index].card_count)*100), 0 )+ "%" : "0%",
-                                                }
-                                            ]
+                                            inner: "Teamanteil: " + (aggregated_data[index].card_count > 0 ? round(((member.cards.length / aggregated_data[index].card_count)*100), 0 )+ "%" : "0%"),
                                         }
                                     ]
                                 }]
@@ -560,7 +497,7 @@
 
                     console.log("SERIES_DATA", SERIES_DATA);
 
-                    const board_card_chart = await self.highchart.start({
+                    const BOARD_CHART = await self.highchart.start({
                         "settings": {
                             "chart": {
                                 "type": "column"
@@ -597,8 +534,7 @@
                         }
                     });
 
-                    chart_area.appendChild($.html(board_card_chart.root));
-
+                    BOARD_CHART_AREA.appendChild($.html(BOARD_CHART.root));
 
                     /**
                      * Login-Count
@@ -636,7 +572,7 @@
                         });
                     }
 
-                    const login_chart = await self.highchart.start({
+                    const LOGIN_CHART = await self.highchart.start({
                         "settings": {
                             "chart": {
                                 "plotBackgroundColor": null,
@@ -648,7 +584,7 @@
                                 "text": "Benutzung der Anwendung (Starts)"
                             },
                             "tooltip": {
-                                "pointFormat": "{series.name}: <b>{point.percentage:.1f}%</b>"
+                                "pointFormat": "<b>{point.y} ({point.percentage:.1f}%)</b>"
                             },
                             "plotOptions": {
                                 "pie": {
@@ -674,14 +610,13 @@
 
                     });
 
-                    chart_area.appendChild($.html(login_chart.root))
+                    LOGIN_CHART_AREA.appendChild($.html(LOGIN_CHART.root))
 
                 }
 
                 main.appendChild($.html(self.html.card, {
                     card_header: "Studierende",
                     card_body: {
-                        // class: "d-flex flex-row justify-content-around",
                         inner: [
                             $.html(self.html.team_chooser, {
                                 teams: team_chooser,
@@ -691,29 +626,25 @@
                             }),
                             {
                                 id: "teams_student_area",
-                                class: "d-flex flex-row justify-content-around"
                             },
                             {
-                                id: "uebersicht_karten",
-                                class: "row-fluid"
+                                class: "row",
+                                inner: [
+                                    {
+                                        id: "uebersicht_karten",
+                                        class: "col-sm-6",
+                                    }, {
+                                        id: "benutzung_anwendung",
+                                        class: "col-sm-6"
+                                    }
+                                ]
                             }
                         ]
                     }
                 }));
 
-
-                /*const logins = $.html(self.html.card, {
-                    card_header: "Anmeldungen",
-                    card_body: {
-                        inner: [
-                            login_chart.root
-                        ]
-                    }
-                });*/
-
-                // main.appendChild(logins);
-
-                changeTeam(2);
+                // Set Default team to show on init
+                changeTeam(0);
 
                 /**
                  *
