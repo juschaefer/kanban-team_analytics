@@ -8,8 +8,6 @@
 
 (function () {
 
-    let card_data = [];
-
     const component = {
 
         name: 'kanban_team_analytics',
@@ -19,23 +17,17 @@
 
         config: {
 
-            // user: ["ccm.instance", "https://ccmjs.github.io/akless-components/user/versions/ccm.user-8.3.1.js", ["ccm.get", "https://ccmjs.github.io/akless-components/user/resources/configs.js", "guest"]],
+            user: ["ccm.instance", "https://ccmjs.github.io/akless-components/user/versions/ccm.user-8.3.1.js", ["ccm.get", "https://ccmjs.github.io/akless-components/user/resources/configs.js", "hbrsinfkaul"]],
             highchart: ["ccm.component", "https://ccmjs.github.io/akless-components/highchart/ccm.highchart.js"],
 
             html: {
-                // "main": ["ccm.load", 'resources/tpl.analytics.html'],
-                // "team": ["ccm.load", 'resources/tpl.team.html'],
-                // main: {
-                //     class: "container",
-                //     inner: [
-                //
-                //     ]
-                // }
-
                 main: {
                     id: "main",
                     class: "container-fluid",
                     inner: [
+                        {
+                            id: "user"
+                        },
                         {
                             class: "card",
                             inner: [
@@ -99,8 +91,6 @@
                                 inner: "Mitglieder"
                             }, {
                                 tag: "ul",
-                                // style: "list-style-type: none;",
-                                // inner: "%team_member%"
                                 inner: [
                                     {
                                         inner: "%team_member%"
@@ -136,9 +126,6 @@
                     class: "row",
                     inner: "%content%"
                 }
-                // boards: {
-                //     inner: "%board_data%"
-                // }
 
             },
 
@@ -150,14 +137,10 @@
                 }
             ],
 
-            css: ["ccm.load", "https://ccmjs.github.io/akless-components/kanban_board/resources/default.css"],
+            css: ["ccm.load", "../kanban_team_analytics/resources/default.css"],
             data: {},
 
             //  "ignore": { "card": { "component": "https://ccmjs.github.io/akless-components/kanban_card/ccm.kanban_card.js", "config": {} } },
-            // "onchange": function (event) {
-            //     console.log(this.index, 'onchange', this.getValue(), event)
-            // },
-            //  "logger": [ "ccm.instance", "https://ccmjs.github.io/akless-components/log/versions/ccm.log-4.0.1.js", [ "ccm.get", "https://ccmjs.github.io/akless-components/log/resources/configs.js", "greedy" ] ]
 
         },
 
@@ -166,20 +149,13 @@
             let $, data;
             const self = this;
 
-            // let team_data;
-            // let board_data;
-            // let card_data;
-
             this.ready = async () => {
 
                 // set shortcut to help functions
                 $ = self.ccm.helper;
 
-                // listen to datastore changes => restart
-                if ($.isObject(self.data) && $.isDatastore(self.data.store)) self.data.store.onchange = self.start;
-
-                // logging of 'ready' event
-                // self.logger && self.logger.log('ready', $.privatize(self, true));
+                // login user, if not logged in
+                self.user && await self.user.login();
 
             };
 
@@ -189,28 +165,19 @@
                 // = Get Raw-Data =
                 // ================
 
-                console.log("===== Get Raw-Data =====");
-
                 const team_data = (await self.data.teams_store.get(self.data.key)).teams;
-                console.log("team_data", team_data);
 
                 const board_data = (await self.data.boards_store.get({ _id: { $regex: '^' + self.data.key + '*' }}));
-                console.log("board_data", board_data);
 
                 const card_data = await self.data.cards_store.get();
-                console.log("card_data", card_data);
 
                 const team_log_data = await self.data.team_log_store.get();
-                console.log("team_log_data", team_log_data);
 
                 // ====================
                 // = Convert Raw-Data =
                 // ====================
-                console.log("===== Convert Data =====");
 
                 team_data.forEach((team, index, team_data) => {
-
-                    // console.log("team", team);
 
                     // Convert Member-Data to array
                     // Add cards-attribute to member
@@ -249,7 +216,6 @@
 
                 // Add Lane Name to Each Card
                 board_data.forEach(board => {
-                    console.log("board.lanes", board.lanes);
                     board.lanes.forEach(lane => {
                         lane.cards.forEach((card, card_index) => {
                             let CARD = getCard(card[2].data.key);
@@ -268,7 +234,6 @@
                 // Sets cards of team members
                 // Add card_count attribute
                 // add board lanes
-                console.log("===== Aggregate Data =====");
 
                 let aggregated_data = team_data;
 
@@ -303,12 +268,9 @@
 
                 });
 
-                console.log("aggregated_data", aggregated_data);
-
                 // =================
                 // = Set Structure =
                 // =================
-                console.log("===== Set Structure =====");
 
                 let teams_html = [];
 
@@ -346,7 +308,7 @@
 
                 const AVERAGE_CARD_TEAM = round(SUM_CARDS / SUM_TEAMS, 1);
 
-                $.setContent(self.element, $.html(self.html.main, {
+                await $.setContent(self.element, $.html(self.html.main, {
                     sum_teams: SUM_TEAMS,
 
                     sum_user: SUM_USER,
@@ -357,6 +319,9 @@
 
                     teams: teams_html
                 }));
+
+                // adding user component to content
+                $.setContent(self.element.querySelector('#user'), self.user.root);
 
                 const main = self.element.querySelector('#main');
 
@@ -427,10 +392,9 @@
 
                 /**
                  *
-                 *
                  */
                 let team_chooser = [];
-                team_data.forEach((current, index, team) => {
+                team_data.forEach((current, index) => {
                     team_chooser.push({
                         tag: "option",
                         value: index,
@@ -438,7 +402,13 @@
                     });
                 });
 
+                /**
+                 * Changes data for given Team-Index and refreshes areas
+                 * @param index of team
+                 * @returns {Promise<void>}
+                 */
                 async function changeTeam(index) {
+                    // Queries HTML-Areas
                     const TEAM_CARD_AREA = self.element.querySelector('#teams_student_area');
                     const BOARD_CHART_AREA = self.element.querySelector('#uebersicht_karten');
                     const LOGIN_CHART_AREA = self.element.querySelector('#benutzung_anwendung');
@@ -480,7 +450,6 @@
                      */
                     let SERIES_DATA = [];
 
-                    console.log("aggregated_data[index]", aggregated_data[index]);
                     aggregated_data[index].lanes.forEach(lane => {
 
                         let card_count = [];
@@ -495,8 +464,9 @@
 
                     });
 
-                    console.log("SERIES_DATA", SERIES_DATA);
-
+                    /**
+                     * Column-Chart showing current card-count for each lane per team-member
+                     */
                     const BOARD_CHART = await self.highchart.start({
                         "settings": {
                             "chart": {
@@ -534,6 +504,7 @@
                         }
                     });
 
+                    // Appeds Char to html-area
                     BOARD_CHART_AREA.appendChild($.html(BOARD_CHART.root));
 
                     /**
@@ -572,6 +543,9 @@
                         });
                     }
 
+                    /**
+                     * Pie Chart showing login-count per team-member
+                     */
                     const LOGIN_CHART = await self.highchart.start({
                         "settings": {
                             "chart": {
@@ -610,6 +584,7 @@
 
                     });
 
+                    // Appends Login-Chart to html-area
                     LOGIN_CHART_AREA.appendChild($.html(LOGIN_CHART.root))
 
                 }
@@ -647,13 +622,11 @@
                 changeTeam(0);
 
                 /**
-                 *
+                 * Returns Board for given key
                  * @param key
-                 * @returns {*}
+                 * @returns {*} board-data
                  */
                 function getBoard(key) {
-                    console.log("===== getBoard(" + key + ") =====");
-
                     let board = null;
 
                     board_data.forEach((current, index, board_data) => {
@@ -669,11 +642,9 @@
                 /**
                  * Returns a Card for given key
                  * @param key
-                 * @returns {*}
+                 * @returns {*} card-data
                  */
                 function getCard(key) {
-                    console.log("===== getCard(" + key + ") =====");
-
                     let card = null;
 
                     card_data.forEach((current, index, card_data) => {
@@ -687,6 +658,13 @@
 
             };
 
+            /**
+             *
+             * @param event
+             * @param data
+             * @returns {*}
+             * @private
+             */
             function _getLogEventData(event, data) {
                 return data.filter(datum => {
                     return datum.event === event;
@@ -704,33 +682,10 @@
     };
 
     /**
-     * ANALYTICS FUNCTION
-     */
-
-    function getTeam(team_data) {
-        console.log("===== getTeam(" + team_data + ") =====");
-
-        if (team_data != null || typeof team_data != 'undefined') {
-            return null;
-        }
-
-
-
-    }
-
-
-    /**
      * MATHEMATICAL FUNCTIONS
      */
 
     function round(number, precision) {
-        // function round(number) {
-
-        // When not a number oder an interger is given
-        // if (!number.isNumber || number.isInteger) {
-        //     console.log("RETURN");
-        //     return number;
-        // }
 
         // Default Value if precision is not set
         if (precision == null || typeof precision == 'undefined') {
@@ -743,7 +698,6 @@
         }
 
         return (Math.round(number * factor) / factor);
-        // return Math.round(number);
     }
 
     function array_max(dataArray) {

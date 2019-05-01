@@ -4,6 +4,12 @@
  * @license The MIT License (MIT)
  */
 
+@import url('https://fonts.googleapis.com/css?family=Source+Sans+Pro');
+
 #element {
-  overflow-x: auto;
+  font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
+  font-size: 1em;
+  font-style: normal;
+  line-height: 1.4em;
+  color: #192429;
 }
