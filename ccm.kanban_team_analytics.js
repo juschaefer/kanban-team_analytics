@@ -44,7 +44,7 @@
                                             inner: [
                                                 {
                                                     class: "col-sm-6",
-                                                    inner: "Teilnehmer: %sum_user%<br><br>Teams: %sum_teams%<br>&Oslash;  Mitglieder pro Team: %average_user_team%<br>&Oslash;  Mitglieder pro Team: %average_user_team%<br><br>Karten: %sum_cards%<br>&Oslash;  Karten pro Team: %average_card_team%"
+                                                    inner: "Teilnehmer: %sum_user%<br><br>Teams: %sum_teams%<br>&Oslash;  Mitglieder pro Team: %average_user_team%<br><br>Karten: %sum_cards%<br>&Oslash;  Karten pro Team: %average_card_team%"
                                                 }, {
                                                     class: "col-sm-6",
                                                     id: "platform_chart"
@@ -139,8 +139,6 @@
 
             css: ["ccm.load", "../kanban_team_analytics/resources/default.css"],
             data: {},
-
-            //  "ignore": { "card": { "component": "https://ccmjs.github.io/akless-components/kanban_card/ccm.kanban_card.js", "config": {} } },
 
         },
 
@@ -290,10 +288,6 @@
                     }));
                 });
 
-                /**
-                 *
-                 *
-                 */
                 const SUM_TEAMS = aggregated_data.length;
 
                 const SUM_USER = aggregated_data.reduce((result, current) => {
